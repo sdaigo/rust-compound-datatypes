@@ -1,3 +1,5 @@
+//! Simulating files one step at a time.
+
 #![allow(unused_variables)]
 use rand::prelude::*;
 use std::fmt;
@@ -8,7 +10,7 @@ fn one_in(denominator: u32) -> bool {
 }
 
 #[derive(Debug, PartialEq)]
-enum FileState {
+pub enum FileState {
     Open,
     Closed,
 }
@@ -22,6 +24,8 @@ impl Display for FileState {
     }
 }
 
+/// Represents a "file"
+/// which probably lives on a file system.
 #[derive(Debug)]
 struct File {
     name: String,
@@ -30,15 +34,17 @@ struct File {
 }
 
 impl File {
-    fn new(name: &str) -> Self {
+    /// New files are assumed to be empty, but a name is required.
+    pub fn new(name: &str) -> Self {
         Self {
             name: String::from(name),
-            data: Vec::new(),
+            data: vec![],
             state: FileState::Closed,
         }
     }
 
-    fn new_with_data(name: &str, data: &Vec<u8>) -> Self {
+    /// New file with initial data
+    pub fn new_with_data(name: &str, data: &Vec<u8>) -> Self {
         Self {
             name: String::from(name),
             data: data.clone(),
@@ -46,19 +52,9 @@ impl File {
         }
     }
 
-    // fn read(self: &File, save_to: &mut Vec<u8>) -> Result<usize, String> {
-    //     if self.state != FileState::Open {
-    //         return Err(String::from("File must be open for reading"));
-    //     }
-
-    //     let mut tmp = self.data.clone();
-    //     let read_length = tmp.len();
-
-    //     save_to.reserve(read_length);
-    //     save_to.append(&mut tmp);
-
-    //     Ok(read_length)
-    // }
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
 }
 
 trait Read {
@@ -67,7 +63,17 @@ trait Read {
 
 impl Read for File {
     fn read(self: &Self, save_to: &mut Vec<u8>) -> Result<usize, String> {
-        Ok(0)
+        if self.state != FileState::Open {
+            return Err(String::from("File must be open for reading"));
+        }
+
+        let mut tmp = self.data.clone();
+        let read_length = tmp.len();
+
+        save_to.reserve(read_length);
+        save_to.append(&mut tmp);
+
+        Ok(read_length)
     }
 }
 
@@ -98,6 +104,7 @@ fn close(mut f: File) -> Result<File, String> {
 }
 
 fn main() {
+    let mut _f1 = File::new("f1.txt");
     let mut f1 = File::new_with_data("f1.txt", &vec![114, 117, 115, 116, 33]);
 
     let mut buffer: Vec<u8> = vec![];
@@ -110,7 +117,7 @@ fn main() {
 
     println!("{:?}", f1);
     println!("{}", f1); // Our Display implementation
-    println!("{} is {} bytes long", &f1.name, &f1_length);
+    println!("{} is {} bytes long", &f1.name, &f1.len());
 
     println!("{}", text);
 }
